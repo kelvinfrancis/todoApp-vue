@@ -1,4 +1,76 @@
 <script setup>
+import { ref, computed, watch, onMounted } from "vue";
+import Greeting from "./components/Greeting.vue";
+import CreateTodo from "./components/CreateTodo.vue";
+import TodoList from "./components/TodoList.vue";
+
+const name = ref("");
+const todos = ref([]);
+const input_content = ref("");
+const input_category = ref(null);
+
+const todos_ascending = computed(() =>
+  [...todos.value].sort((a, b) => b.createAt - a.createAt)
+);
+
+const addTodo = () => {
+  if (input_content.value.trim() === "" || input_category.value === null)
+    return;
+  todos.value.push({
+    content: input_content.value,
+    category: input_category.value,
+    done: false,
+    createAt: new Date().getTime(),
+  });
+  input_content.value = "";
+  input_category.value = null;
+};
+
+const updateTodo = (index, newTodo) => {
+  todos.value[index] = newTodo;
+};
+
+const removeTodo = (index) => {
+  todos.value.splice(index, 1);
+};
+
+watch(name, (newVal) => {
+  localStorage.setItem("name", newVal);
+});
+
+watch(
+  todos,
+  (newVal) => {
+    localStorage.setItem("todos", JSON.stringify(newVal));
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  name.value = localStorage.getItem("name") || "";
+  todos.value = JSON.parse(localStorage.getItem("todos")) || [];
+});
+</script>
+
+<template>
+  <main class="app">
+    <Greeting v-model:name="name" />
+    <CreateTodo
+      :inputContent="input_content"
+      :inputCategory="input_category"
+      @update:inputContent="input_content = $event"
+      @update:inputCategory="input_category = $event"
+      @add-todo="addTodo"
+    />
+    <TodoList
+      :todos="todos_ascending"
+      @update-todo="updateTodo"
+      @remove-todo="removeTodo"
+    />
+  </main>
+</template>
+
+<!-- <script setup>
   import { ref, onMounted, computed, watch } from "vue";
 
   const todos = ref([]);
@@ -121,4 +193,4 @@
 
   </main>
 
-</template>
+</template> -->
